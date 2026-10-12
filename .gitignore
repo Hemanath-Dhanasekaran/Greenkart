@@ -1,0 +1,9 @@
+node_modules/
+allure-report/
+allure-results/
+playwright-report/
+test-results/
+logs/
+.playwright-mcp/
+network_requests.txt
+*.log

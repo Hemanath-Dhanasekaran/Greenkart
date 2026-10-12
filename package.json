@@ -1,0 +1,21 @@
+{
+  "name": "greenkart-framework",
+  "version": "1.0.0",
+  "description": "Playwright UI test automation framework for GreenKart",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "test": "npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "allure-playwright": "^3.4.2"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "winston": "^3.18.3"
+  },
+  "directories": {
+    "test": "tests"
+  }
+}
