@@ -50,12 +50,25 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+      # The custom reporter writes a nested allure-report/<runId>/ folder (kept
+      # for local run history). For CI, rebuild a standard standalone report so
+      # index.html, app.js, data/, widgets/ and plugin/ sit at the artifact root.
+      - name: Generate standalone Allure report
+        if: ${{ !cancelled() }}
+        run: |
+          allure generate test-results/allure-results/* --clean -o allure-report
+          for f in index.html app.js styles.css data widgets plugin; do
+            test -e "allure-report/$f" || { echo "::error::allure-report/$f missing"; exit 1; }
+          done
+          ls -la allure-report
+
       - name: Upload Allure report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
           path: allure-report/
+          if-no-files-found: error
           retention-days: 30
 
       - name: Upload Allure results (raw)
