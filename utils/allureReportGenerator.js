@@ -40,7 +40,9 @@ class AllureReportGenerator {
     const reportDir = path.join(this.reportRoot, this.runId);
 
     try {
-      execSync(`${resolveAllureCommand()} generate "${this.resultsDir}" --clean -o "${reportDir}"`, {
+      // --single-file embeds all report data into index.html so it opens by
+      // double-click; a multi-file report only loads through an HTTP server.
+      execSync(`${resolveAllureCommand()} generate "${this.resultsDir}" --single-file --clean -o "${reportDir}"`, {
         stdio: 'inherit',
       });
     } catch (err) {
