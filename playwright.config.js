@@ -49,6 +49,9 @@ module.exports = defineConfig({
 
   reporter: [
     ['list'],
+    // Machine-readable outcomes (per attempt, with retries) for the QA
+    // Intelligence history; see qa-intel/README.md. Overwritten every run.
+    ['json', { outputFile: 'qa-intel-output/playwright-results.json' }],
     ['html', { outputFolder: `${PLAYWRIGHT_REPORT_ROOT}/${RUN_ID}`, open: 'never' }],
     [
       'allure-playwright',

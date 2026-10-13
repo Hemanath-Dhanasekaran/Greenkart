@@ -7,3 +7,5 @@ logs/
 .playwright-mcp/
 network_requests.txt
 *.log
+qa-intel-output/
+.qa-history/

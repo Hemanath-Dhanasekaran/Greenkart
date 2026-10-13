@@ -3,7 +3,17 @@ name: Playwright Tests
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  # Daily regression run at 09:00 IST (03:30 UTC), recorded by the QA
+  # Intelligence history even when no code changed.
+  schedule:
+    - cron: '30 3 * * *'
   workflow_dispatch:
+
+# Read-only: this workflow only checks out code and uploads artifacts.
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -41,7 +51,30 @@ jobs:
       # with the CI worker/retry settings. The custom Allure reporter builds
       # the HTML report into allure-report/<runId> at the end of the run.
       - name: Run Playwright tests
+        id: tests
         run: npx playwright test
+
+      # QA Intelligence: turn Playwright's JSON report into a small sanitised
+      # results file (titles, outcomes, retries, short errors). Runs even when
+      # earlier steps failed so the history can tell "tests failed" apart from
+      # "tests never ran". Never fails the job.
+      - name: Summarize test results for QA history
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          QA_INTEL_SCHEDULE: ${{ github.event.schedule }}
+          QA_INTEL_TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        run: node qa-intel/bin/qa-intel.js extract-results
+
+      - name: Upload QA history results
+        if: ${{ always() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-intel-results-attempt-${{ github.run_attempt }}
+          path: qa-intel-output/run-results.json
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Upload Playwright HTML report
         if: ${{ !cancelled() }}

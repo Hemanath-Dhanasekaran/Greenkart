@@ -5,12 +5,20 @@
   "license": "ISC",
   "type": "commonjs",
   "scripts": {
-    "test": "npx playwright test"
+    "test": "npx playwright test",
+    "qa:collect": "node qa-intel/bin/qa-intel.js collect",
+    "qa:ask": "node qa-intel/bin/qa-intel.js ask",
+    "qa:dashboard": "node qa-intel/bin/qa-intel.js dashboard --open",
+    "qa:verify": "node qa-intel/bin/qa-intel.js verify",
+    "qa:test": "node --test \"qa-intel/test/*.test.js\""
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
     "allure-commandline": "2.35.1",
-    "allure-playwright": "^3.4.2"
+    "allure-playwright": "^3.4.2",
+    "yaml": "^2.9.1"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

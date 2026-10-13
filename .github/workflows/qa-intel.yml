@@ -1,0 +1,70 @@
+name: QA Intelligence
+
+# Records commits, test changes and every "Playwright Tests" run into the
+# qa-history data branch, then rebuilds the index and dashboard.
+# Runs separately from the test workflow, so it can never make tests fail.
+on:
+  workflow_run:
+    workflows: [Playwright Tests]
+    types: [completed]
+  # Recovery sweep: picks up anything a missed or failed collection skipped.
+  schedule:
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One writer at a time; the collector also retries pushes if another writer wins.
+concurrency:
+  group: qa-intel-history
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: Record QA history
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write       # push to the qa-history data branch (never to main)
+      actions: read         # read workflow runs, jobs and artifacts
+      pull-requests: read   # link commits to pull requests
+
+    steps:
+      # Always the default branch's trusted code — never code from a PR run.
+      # Full history so every commit can be analysed.
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Collect QA history
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          QA_INTEL_TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: >
+          node qa-intel/bin/qa-intel.js collect
+          --ref origin/${{ github.event.repository.default_branch }}
+          --dashboard-out qa-intel-output/qa-dashboard.html
+
+      - name: Verify history integrity
+        run: node qa-intel/bin/qa-intel.js verify --offline
+
+      - name: Upload QA dashboard
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: qa-dashboard
+          path: qa-intel-output/qa-dashboard.html
+          if-no-files-found: ignore
+          retention-days: 30

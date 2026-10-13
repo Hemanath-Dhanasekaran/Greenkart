@@ -1,0 +1,36 @@
+name: QA Intelligence self-test
+
+# Unit tests for the QA Intelligence agent itself (no browser, no live site).
+# Kept out of the Playwright Tests workflow so a tooling test failure is never
+# reported as a test-suite failure; the history collector ignores this workflow.
+on:
+  push:
+    branches: [main]
+    paths: ['qa-intel/**', 'package.json', 'package-lock.json', 'playwright.config.js', '.github/workflows/qa-intel*.yml']
+  pull_request:
+    paths: ['qa-intel/**', 'package.json', 'package-lock.json', 'playwright.config.js', '.github/workflows/qa-intel*.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selftest:
+    name: QA Intelligence unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run QA Intelligence tests
+        run: npm run qa:test
